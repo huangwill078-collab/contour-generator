@@ -1,0 +1,32 @@
+{
+  "name": "等高线生成器",
+  "short_name": "等高线",
+  "description": "框选范围，一键生成真实等高线地形图。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#102b27",
+  "theme_color": "#102b27",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "./icons/map-generator-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/map-generator-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/map-generator-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

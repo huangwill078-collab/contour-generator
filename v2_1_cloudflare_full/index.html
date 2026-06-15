@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#15352f" />
+  <meta name="color-scheme" content="light" />
+  <title>等高线生成器</title>
+  <link rel="stylesheet" href="./assets/app.css?v=contour-generator-6-5" />
+
+<meta name="application-name" content="等高线生成器" />
+<meta name="apple-mobile-web-app-title" content="等高线生成器" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="mobile-web-app-capable" content="yes" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/map-generator-192.png" />
+<link rel="apple-touch-icon" href="./icons/map-generator-touch.png" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <img class="brand-icon" src="./icons/map-generator-touch.png" alt="" />
+        <div><h1>等高线生成器</h1><p>一键生成真实等高线</p></div>
+      </div>
+      <button class="install-tool" id="installButton" aria-label="安装工具" title="点击安装工具"><i data-lucide="download"></i><span>点击安装工具</span></button>
+    </header>
+
+    <main>
+      <section class="panel input-panel">
+        <div class="panel-heading">
+          <div><span class="eyebrow">制图参数</span><h2>四步生成等高线地形图</h2></div>
+          <span class="source-badge"><i data-lucide="database"></i>真实 DEM</span>
+        </div>
+
+        <form id="terrainForm">
+          <div class="workflow-tabs" aria-label="制图步骤">
+            <span>① 定位/框选</span><span>② 图幅/比例尺</span><span>③ 等高距</span><span>④ 样式/输出</span>
+          </div>
+
+          <div class="simple-form teacher-form">
+            <section class="form-step full">
+              <div class="step-title"><span>①</span><div><strong>选择制图范围</strong><small>地名只负责定位，最终以地图视窗或经纬度框为准。</small></div></div>
+              <div class="field full">
+                <label for="placeName">搜索地名 / 山地 / 城市</label>
+                <div class="inline-action">
+                  <input id="placeName" name="placeName" value="武夷山市" placeholder="例如：武夷山、喜德县、贡嘎山东坡" autocomplete="off" />
+                  <button type="button" id="locateButton">定位</button>
+                </div>
+                <small id="locationHint">可先定位到城市或山地附近，再拖动地图并使用当前视窗作为范围。</small>
+              </div>
+              <div class="form-grid compact-grid map-layer-row">
+                <div class="field">
+                  <label for="mapViewStyle">地图视窗</label>
+                  <select id="mapViewStyle">
+                    <option value="osm" selected>标准地图</option>
+                    <option value="satellite">卫星遥感图</option>
+                    <option value="terrain">地形参考图</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="mapFrameHint">框选方式</label>
+                  <select id="mapFrameHint" disabled>
+                    <option>拖动绿色框，拖四角缩放</option>
+                  </select>
+                </div>
+              </div>
+              <div id="selectorMap" class="selector-map" aria-label="地图框选范围"></div>
+              <div class="map-tools">
+                <button type="button" id="useMapView">使用当前地图视窗</button>
+                <button type="button" id="makeFrameFromScale">按图幅和比例尺生成范围框</button>
+                <button type="button" id="fitBbox">回到当前范围</button>
+              </div>
+              <div class="bbox-grid">
+                <div class="field"><label for="westLon">西经/西界</label><input id="westLon" type="number" step="0.000001" /></div>
+                <div class="field"><label for="southLat">南界</label><input id="southLat" type="number" step="0.000001" /></div>
+                <div class="field"><label for="eastLon">东界</label><input id="eastLon" type="number" step="0.000001" /></div>
+                <div class="field"><label for="northLat">北界</label><input id="northLat" type="number" step="0.000001" /></div>
+              </div>
+            </section>
+
+            <section class="form-step full">
+              <div class="step-title"><span>②</span><div><strong>图幅与比例尺</strong><small>面向普通老师：先选图幅，再让比例尺决定空间尺度。</small></div></div>
+              <div class="form-grid compact-grid">
+                <div class="field">
+                  <label for="aspectRatio">图幅比例</label>
+                  <select id="aspectRatio">
+                    <option value="16:9" selected>16:9 课堂/PPT</option>
+                    <option value="4:3">4:3 传统课件</option>
+                    <option value="1:1">1:1 试题小图</option>
+                    <option value="A4L">A4 横版</option>
+                    <option value="A4P">A4 竖版</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="mapScale">比例尺</label>
+                  <select id="mapScale">
+                    <option value="25000">1:25,000 局部山谷</option>
+                    <option value="50000" selected>1:50,000 山地局部</option>
+                    <option value="100000">1:100,000 县域局部</option>
+                    <option value="250000">1:250,000 县域/地市</option>
+                    <option value="500000">1:500,000 大区域</option>
+                    <option value="1000000">1:1,000,000 高原/山脉</option>
+                  </select>
+                </div>
+              </div>
+              <div class="range-readout" id="rangeReadout">当前范围：待选择</div>
+            </section>
+
+            <section class="form-step full">
+              <div class="step-title"><span>③</span><div><strong>等高距</strong><small>可自动推荐，也可手动指定；青藏高原等区域可用 500 m 或 1000 m。</small></div></div>
+              <div class="field full">
+                <label for="contourInterval">等高距（米）</label>
+                <div class="inline-action small-action">
+                  <input id="contourInterval" name="contourInterval" type="number" min="5" max="2000" step="5" value="50" required />
+                  <button type="button" id="autoInterval">自动推荐</button>
+                </div>
+                <div class="quick-buttons" data-target="contourInterval">
+                  <button type="button" data-number="10">10 m</button><button type="button" data-number="20">20 m</button><button type="button" class="active" data-number="50">50 m</button><button type="button" data-number="100">100 m</button><button type="button" data-number="200">200 m</button><button type="button" data-number="500">500 m</button><button type="button" data-number="1000">1000 m</button>
+                </div>
+              </div>
+              <div class="form-grid compact-grid">
+                <div class="field"><label for="indexEvery">计曲线</label><select id="indexEvery"><option value="0">普通曲线（不加粗）</option><option value="5" selected>每 5 条加粗</option><option value="4">每 4 条加粗</option><option value="10">每 10 条加粗</option></select></div>
+                <div class="field"><label for="detailLevel">处理精度</label><select id="detailLevel"><option value="fast">快速预览</option><option value="auto" selected>均衡</option><option value="high">较高精度</option></select></div>
+              </div>
+            </section>
+
+            <section class="form-step full">
+              <div class="step-title"><span>④</span><div><strong>样式与输出</strong><small>默认同时生成线稿版与地形美化版。</small></div></div>
+              <fieldset class="field full output-options layer-options">
+                <legend>真实图层叠加</legend>
+                <div class="option-grid layer-option-grid">
+                  <label class="check-option"><input id="layerPlaces" type="checkbox" checked /><span><strong>城镇与名称</strong><small>城市、镇、村点位和名称</small></span></label>
+                  <label class="check-option"><input id="layerRivers" type="checkbox" /><span><strong>河流</strong><small>主要河流与水系线</small></span></label>
+                  <label class="check-option"><input id="layerRoads" type="checkbox" /><span><strong>高速/主干路</strong><small>高速、国省道等主干线</small></span></label>
+                  <label class="check-option"><input id="layerRailways" type="checkbox" /><span><strong>铁路</strong><small>铁路线路</small></span></label>
+                </div>
+              </fieldset>
+
+              <fieldset class="field full output-options">
+                <legend>显示与输出</legend>
+                <div class="option-grid">
+                  <label class="check-option"><input id="showColor" type="checkbox" checked /><span><strong>地形美化版</strong><small>分层设色 + 晕渲 + 图例</small></span></label>
+                  <label class="check-option"><input id="showContours" type="checkbox" checked /><span><strong>线稿版</strong><small>黑白等高线，适合试卷</small></span></label>
+                  <label class="check-option"><input id="showCoordinates" type="checkbox" checked /><span><strong>显示经纬度</strong><small>经纬网与坐标</small></span></label>
+                  <label class="check-option"><input id="showBoundary" type="checkbox" /><span><strong>行政区边界</strong><small>能取得真实边界时叠加</small></span></label>
+                  <label class="check-option"><input id="showCoastline" type="checkbox" checked /><span><strong>沿海陆地轮廓</strong><small>沿海地区自动描出海岸线</small></span></label>
+                  <label class="check-option"><input id="showHillshade" type="checkbox" checked /><span><strong>地形晕渲</strong><small>增强起伏感</small></span></label>
+                  <label class="check-option"><input id="showLabels" type="checkbox" checked /><span><strong>高程标注</strong><small>标注部分计曲线</small></span></label>
+                </div>
+              </fieldset>
+            </section>
+          </div>
+
+          <div class="data-note"><i data-lucide="locate-fixed"></i><span>主流程不需要 QGIS：网页直接读取 DEM，生成线稿版与地形美化版，并导出 PNG/SVG/GeoJSON。</span></div>
+          <button class="generate-button" id="generateButton" type="submit"><i data-lucide="layers-3"></i><span>生成地形与等高线</span></button>
+        </form>
+      </section>
+
+      <section class="panel progress-panel" id="progressPanel" hidden>
+        <div class="progress-head"><div class="contour-loader" aria-hidden="true"><span></span><span></span><span></span></div><div><strong id="progressTitle">正在自动定位</strong><small id="progressDetail">请稍候</small></div></div>
+        <div class="progress-track"><span id="progressBar"></span></div>
+      </section>
+
+      <section class="results" id="results" hidden>
+        <div class="result-summary">
+          <div><span class="eyebrow">生成完成</span><h2 id="resultTitle">地形等高线成果</h2><p id="resultMeta"></p></div>
+          <span class="complete-badge"><i data-lucide="circle-check"></i>真实数据</span>
+        </div>
+
+        <article class="map-card" id="colorCard">
+          <div class="map-card-head"><div><span>01</span><h3>分层设色地形图</h3></div><button class="download-button primary" id="downloadColor" type="button"><i data-lucide="image-down"></i>下载 PNG</button></div>
+          <div class="canvas-shell"><canvas id="colorCanvas" width="1600" height="900"></canvas></div>
+        </article>
+
+        <article class="map-card" id="lineCard">
+          <div class="map-card-head"><div><span>02</span><h3>等高线线稿</h3></div><button class="download-button" id="downloadLine" type="button"><i data-lucide="image-down"></i>下载 PNG</button></div>
+          <div class="canvas-shell"><canvas id="lineCanvas" width="1600" height="900"></canvas></div>
+        </article>
+
+        <div class="data-actions">
+          <button class="data-button" id="downloadDem" type="button"><i data-lucide="table-properties"></i><span><strong>DEM 高程 CSV</strong><small>经纬度与高程采样值</small></span></button>
+          <button class="data-button" id="downloadContours" type="button"><i data-lucide="git-branch"></i><span><strong>等高线 GeoJSON</strong><small>导入 QGIS 继续编辑</small></span></button>
+          <button class="data-button" id="downloadMetadata" type="button"><i data-lucide="braces"></i><span><strong>制图参数</strong><small>中心、范围与数据源</small></span></button>
+          <button class="data-button" id="downloadSvg" type="button"><i data-lucide="file-code-2"></i><span><strong>SVG 矢量图</strong><small>课堂与试卷排版</small></span></button>
+        </div>
+        <p class="source-note" id="sourceNote"></p>
+      </section>
+    </main>
+    <footer class="site-footer"><div>©2026 Huang Yawei</div><small>本工具仅用于等高线制作</small></footer>
+  </div>
+
+  <dialog id="installDialog"><div class="dialog-head"><h2>安装到手机桌面</h2><button class="icon-button" id="closeInstall" aria-label="关闭"><i data-lucide="x"></i></button></div><div class="dialog-body" id="installText"></div></dialog>
+  <div class="toast" id="toast"></div>
+  <script src="./assets/lucide.min.js?v=contour-generator-6-4"></script>
+  <script type="module" src="./assets/app.js?v=contour-generator-6-5"></script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(() => {}));
+}
+</script>
+</body>
+</html>
